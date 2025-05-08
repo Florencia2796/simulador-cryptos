@@ -42,7 +42,10 @@ def purchase():
         headers = {'X-CoinAPI-Key': API_KEY}
         response = requests.get(url, headers=headers).json()
 
-        rate = response['rate']
+        rate = request.form.get('rate')
+        if not rate:
+             return redirect(url_for('purchase'))  # evita fallo si se accede mal
+        rate = float(rate)
         cantidad_to = cantidad_from * rate
 
         resultado = {
@@ -76,8 +79,14 @@ def purchase():
 
         return redirect(url_for('index'))
 
-    return render_template("purchase.html", monedas=MONEDAS, resultado=resultado, datos_formulario=datos_formulario)
-
+    return render_template(
+    "purchase.html",
+    monedas=MONEDAS,
+    resultado=resultado,
+    from_moneda=datos_formulario.get('from'),
+    to_moneda=datos_formulario.get('to'),
+    cantidad=datos_formulario.get('cantidad', '')
+)
 
 # Ruta para pag de estado de la inversión
 @app.route('/status')
