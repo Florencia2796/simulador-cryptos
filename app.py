@@ -1,11 +1,21 @@
+import sqlite3
+import os
 from flask import Flask, render_template
 
 app = Flask(__name__)
 
-# Ruta para pag de inicio (movimientos)
+# Ruta a la base
+basedir = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.join(basedir, 'instance', 'database.db')
+
 @app.route('/')
 def index():
-    return render_template('index.html')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM movimientos")
+    movimientos = cursor.fetchall()
+    conn.close()
+    return render_template("index.html", movimientos=movimientos)
 
 # Ruta para pag de cambio
 @app.route('/purchase')

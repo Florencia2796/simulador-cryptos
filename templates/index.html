@@ -1,8 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}Inicio{% endblock %}
+{% block title %}Movimientos{% endblock %}
 
 {% block content %}
 <h2>Movimientos</h2>
-<p>Pronto verás aquí la tabla con tus operaciones.</p>
+
+{% if movimientos %}
+<table>
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>De</th>
+            <th>Cantidad</th>
+            <th>A</th>
+            <th>Cantidad</th>
+            <th>Valor unitario</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in movimientos %}
+        <tr>
+            <td>{{ m[1] }}</td>
+            <td>{{ m[2] }}</td>
+            <td>{{ m[3] }}</td>
+            <td>{{ m[4] }}</td>
+            <td>{{ m[5] }}</td>
+            <td>{{ m[6] }}</td>
+            <td>{{ m[7] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>SIN MOVIMIENTOS</p>
+{% endif %}
+
 {% endblock %}
