@@ -1,8 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Compra de Cripto{% endblock %}
+{% block title %}Nueva Operación{% endblock %}
 
 {% block content %}
-<h2>Formulario de Compra </h2>
-<p>Esta sección tendrá el formulario para operar con criptomonedas.</p>
+<h2>Compra, venta o intercambio</h2>
+
+<form method="POST">
+    <label for="from">De:</label>
+    <input type="text" name="from" id="from" placeholder="Ej: EUR" required>
+
+    <label for="to">A:</label>
+    <input type="text" name="to" id="to" placeholder="Ej: BTC" required>
+
+    <label for="cantidad">Cantidad:</label>
+    <input type="number" name="cantidad" id="cantidad" step="0.01" required>
+
+    <button type="submit">Realizar operación</button>
+</form>
 {% endblock %}
