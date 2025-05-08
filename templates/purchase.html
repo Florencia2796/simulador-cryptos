@@ -24,18 +24,19 @@
     <input type="number" name="cantidad" step="0.01" required
            value="{{ datos_formulario.cantidad or '' }}">
 
-    <button type="submit" name="calcular">🧮 Calcular</button>
+    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+        <button type="submit" name="calcular">Calcular</button>
+        <button type="submit" name="confirmar" {% if not resultado %}disabled{% endif %}>Comprar</button>
+    </div>
 
     {% if resultado %}
-    <article>
+    <article style="margin-top: 1.5rem;">
         <h3>Previsualización:</h3>
         <p>Con <strong>{{ resultado.cantidad_from }} {{ resultado.from }}</strong> obtendrás aproximadamente:</p>
         <p><strong>{{ resultado.cantidad_to }} {{ resultado.to }}</strong></p>
         <p>Precio unitario: 1 {{ resultado.from }} = {{ resultado.rate }} {{ resultado.to }}</p>
 
-        <button type="submit" name="confirmar">✅ Confirmar operación</button>
-
-        <!-- Campos ocultos para no perder los datos -->
+        <!-- Campo oculto para pasar el valor calculado a la confirmación -->
         <input type="hidden" name="rate" value="{{ resultado.rate }}">
     </article>
     {% endif %}
