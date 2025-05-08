@@ -22,7 +22,14 @@
 
     <label for="cantidad">Cantidad:</label>
     <input type="number" name="cantidad" step="0.01" required value="{{ cantidad }}">
-           
+
+    {% if resultado %}
+    <!-- Campos ocultos para enviar los datos en la compra -->
+    <input type="hidden" name="rate" value="{{ resultado.rate }}">
+    <input type="hidden" name="cantidad_to" value="{{ resultado.cantidad_to }}">
+    <input type="hidden" name="cantidad_from" value="{{ resultado.cantidad_from }}">
+    {% endif %}
+
     <div style="display: flex; gap: 1rem; margin-top: 1rem;">
         <button type="submit" name="calcular">Calcular</button>
         <button type="submit" name="confirmar" {% if not resultado %}disabled{% endif %}>Comprar</button>
@@ -34,10 +41,11 @@
         <p>Con <strong>{{ resultado.cantidad_from }} {{ resultado.from }}</strong> obtendrás aproximadamente:</p>
         <p><strong>{{ resultado.cantidad_to }} {{ resultado.to }}</strong></p>
         <p>Precio unitario: 1 {{ resultado.from }} = {{ resultado.rate }} {{ resultado.to }}</p>
-
-        <!-- Campo oculto para pasar el valor calculado a la confirmación -->
-        <input type="hidden" name="rate" value="{{ resultado.rate }}">
     </article>
+    {% endif %}
+
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
     {% endif %}
 </form>
 {% endblock %}
