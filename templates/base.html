@@ -3,31 +3,50 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Simulador Criptomonedas{% endblock %}</title>
+    <title>{% block title %}Simulador Cripto{% endblock %}</title>
     <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css">
 </head>
 <body>
-    <header>
-        <nav class="container">
-            <ul>
-                <li><strong>myCRYPTO</strong></li>
-            </ul>
-            <ul>
-                <li><a href="{{ url_for('index') }}" {% if request.path == '/' %}aria-current="page"{% endif %}>Inicio</a></li>
-                <li><a href="{{ url_for('purchase') }}" {% if request.path == '/purchase' %}aria-current="page"{% endif %}>Compra</a></li>
-                <li><a href="{{ url_for('status') }}" {% if request.path == '/status' %}aria-current="page"{% endif %}>Estado</a></li>
-            </ul>
-        </nav>
-    </header>
 
-    <main class="container">
-        {% block content %}{% endblock %}
-    </main>
+<header>
+    <nav class="container">
+        <ul>
+            <li><strong>myCRYPTO</strong></li>
+        </ul>
+        <ul>
+            <li>
+                <a href="{{ url_for('index') }}"
+                   class="{% if request.path == '/' %}secondary{% endif %}"
+                   {% if request.path == '/' %}aria-current="page"{% endif %}>
+                   Inicio
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('purchase') }}"
+                   class="{% if request.path == '/purchase' %}secondary{% endif %}"
+                   {% if request.path == '/purchase' %}aria-current="page"{% endif %}>
+                   Compra
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('status') }}"
+                   class="{% if request.path == '/status' %}secondary{% endif %}"
+                   {% if request.path == '/status' %}aria-current="page"{% endif %}>
+                   Estado
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
 
-    <footer class="container">
-        <hr>
-        <p>&copy; 2025 Proyecto Simulador Criptomonedas.</p>
-    </footer>
+<main class="container">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="container">
+    <hr>
+    <p>© 2025 - Proyecto Bootcamp - Simulador de Criptomonedas</p>
+</footer>
 
 </body>
 </html>

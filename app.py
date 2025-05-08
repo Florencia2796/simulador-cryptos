@@ -7,11 +7,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 API_KEY = os.getenv("COINAPI_KEY")
-app = Flask(__name__)
-
-# Ruta a la base
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'instance', 'database.db')
+
+app = Flask(__name__)
+
+# Constante global de monedas disponibles
+MONEDAS = ["EUR", "BTC", "ETH", "USDT", "ADA", "SOL", "XRP", "DOT", "DOGE", "SHIB"]
+
+
+# Ruta a la base
 
 @app.route('/')
 def index():
@@ -25,12 +30,14 @@ def index():
 # Ruta para pag de cambio
 @app.route('/purchase', methods=['GET', 'POST'])
 def purchase():
-    if request.method == 'POST':
+    resultado = None
+    datos_formulario = {}
+
+    if request.method == 'POST' and 'calcular' in request.form:
         from_moneda = request.form['from']
         to_moneda = request.form['to']
         cantidad_from = float(request.form['cantidad'])
 
-        # Llamada a CoinAPI para obtener el valor unitario
         url = f"https://rest.coinapi.io/v1/exchangerate/{from_moneda}/{to_moneda}"
         headers = {'X-CoinAPI-Key': API_KEY}
         response = requests.get(url, headers=headers).json()
@@ -38,11 +45,26 @@ def purchase():
         rate = response['rate']
         cantidad_to = cantidad_from * rate
 
-        # Fecha y hora actuales
+        resultado = {
+            'from': from_moneda,
+            'to': to_moneda,
+            'cantidad_from': cantidad_from,
+            'cantidad_to': round(cantidad_to, 8),
+            'rate': round(rate, 4)
+        }
+
+        datos_formulario = request.form
+
+    elif request.method == 'POST' and 'confirmar' in request.form:
+        from_moneda = request.form['from']
+        to_moneda = request.form['to']
+        cantidad_from = float(request.form['cantidad'])
+        rate = float(request.form['rate'])
+        cantidad_to = cantidad_from * rate
+
         fecha = datetime.now().strftime('%d/%m/%Y')
         hora = datetime.now().strftime('%H:%M:%S')
 
-        # Guardar en la base
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute('''
@@ -54,12 +76,14 @@ def purchase():
 
         return redirect(url_for('index'))
 
-    return render_template('purchase.html')
+    return render_template("purchase.html", monedas=MONEDAS, resultado=resultado, datos_formulario=datos_formulario)
+
 
 # Ruta para pag de estado de la inversión
 @app.route('/status')
 def status():
     return render_template('status.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)

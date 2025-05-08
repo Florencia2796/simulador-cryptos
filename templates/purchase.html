@@ -7,14 +7,37 @@
 
 <form method="POST">
     <label for="from">De:</label>
-    <input type="text" name="from" id="from" placeholder="Ej: EUR" required>
+    <select name="from" required>
+        {% for moneda in monedas %}
+        <option value="{{ moneda }}" {% if datos_formulario.from == moneda %}selected{% endif %}>{{ moneda }}</option>
+        {% endfor %}
+    </select>
 
     <label for="to">A:</label>
-    <input type="text" name="to" id="to" placeholder="Ej: BTC" required>
+    <select name="to" required>
+        {% for moneda in monedas %}
+        <option value="{{ moneda }}" {% if datos_formulario.to == moneda %}selected{% endif %}>{{ moneda }}</option>
+        {% endfor %}
+    </select>
 
     <label for="cantidad">Cantidad:</label>
-    <input type="number" name="cantidad" id="cantidad" step="0.01" required>
+    <input type="number" name="cantidad" step="0.01" required
+           value="{{ datos_formulario.cantidad or '' }}">
 
-    <button type="submit">Realizar operación</button>
+    <button type="submit" name="calcular">🧮 Calcular</button>
+
+    {% if resultado %}
+    <article>
+        <h3>Previsualización:</h3>
+        <p>Con <strong>{{ resultado.cantidad_from }} {{ resultado.from }}</strong> obtendrás aproximadamente:</p>
+        <p><strong>{{ resultado.cantidad_to }} {{ resultado.to }}</strong></p>
+        <p>Precio unitario: 1 {{ resultado.from }} = {{ resultado.rate }} {{ resultado.to }}</p>
+
+        <button type="submit" name="confirmar">✅ Confirmar operación</button>
+
+        <!-- Campos ocultos para no perder los datos -->
+        <input type="hidden" name="rate" value="{{ resultado.rate }}">
+    </article>
+    {% endif %}
 </form>
 {% endblock %}
