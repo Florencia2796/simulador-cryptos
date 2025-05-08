@@ -9,14 +9,14 @@
     <label for="from">De:</label>
     <select name="from" required>
         {% for moneda in monedas %}
-        <option value="{{ moneda }}" {% if datos_formulario.from == moneda %}selected{% endif %}>{{ moneda }}</option>
+        <option value="{{ moneda }}" {% if datos_formulario.get('from') == moneda %}selected{% endif %}>{{ moneda }}</option>
         {% endfor %}
     </select>
 
     <label for="to">A:</label>
     <select name="to" required>
         {% for moneda in monedas %}
-        <option value="{{ moneda }}" {% if datos_formulario.to == moneda %}selected{% endif %}>{{ moneda }}</option>
+        <option value="{{ moneda }}" {% if datos_formulario.get('to') == moneda %}selected{% endif %}>{{ moneda }}</option>
         {% endfor %}
     </select>
 
