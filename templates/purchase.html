@@ -23,26 +23,24 @@
     <label for="cantidad">Cantidad:</label>
     <input type="number" name="cantidad" step="0.01" required value="{{ cantidad }}">
 
-    {% if resultado %}
-    <!-- Campos ocultos para enviar los datos en la compra -->
-    <input type="hidden" name="rate" value="{{ resultado.rate }}">
-    <input type="hidden" name="cantidad_to" value="{{ resultado.cantidad_to }}">
-    <input type="hidden" name="cantidad_from" value="{{ resultado.cantidad_from }}">
-    {% endif %}
+    <!-- Este es el renglón extra SIEMPRE VISIBLE -->
+    <div id="resultado-conversion" style="margin-top: 1.5rem; padding: 1rem; border: 1px solid #ccc;">
+        {% if resultado %}
+            <h3>Resultado del cálculo:</h3>
+            <p>Con <strong>{{ resultado.cantidad_from }} {{ resultado.from }}</strong> obtendrás aproximadamente:</p>
+            <p><strong>{{ resultado.cantidad_to }} {{ resultado.to }}</strong></p>
+            <p>Precio unitario: 1 {{ resultado.from }} = {{ resultado.rate }} {{ resultado.to }}</p>
+
+            <input type="hidden" name="rate" value="{{ resultado.rate }}">
+        {% else %}
+            <p>🔎 Aquí se mostrará el resultado de la conversión después de pulsar "Calcular".</p>
+        {% endif %}
+    </div>
 
     <div style="display: flex; gap: 1rem; margin-top: 1rem;">
         <button type="submit" name="calcular">Calcular</button>
         <button type="submit" name="confirmar" {% if not resultado %}disabled{% endif %}>Comprar</button>
     </div>
-
-    {% if resultado %}
-    <article style="margin-top: 1.5rem;">
-        <h3>Previsualización:</h3>
-        <p>Con <strong>{{ resultado.cantidad_from }} {{ resultado.from }}</strong> obtendrás aproximadamente:</p>
-        <p><strong>{{ resultado.cantidad_to }} {{ resultado.to }}</strong></p>
-        <p>Precio unitario: 1 {{ resultado.from }} = {{ resultado.rate }} {{ resultado.to }}</p>
-    </article>
-    {% endif %}
 
     {% if error %}
     <p style="color: red;">{{ error }}</p>

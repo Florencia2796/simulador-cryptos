@@ -26,17 +26,22 @@ def index():
 @app.route('/purchase', methods=['GET', 'POST'])
 def purchase():
     resultado = None
-    datos_formulario = {}
+    from_moneda = ''
+    to_moneda = ''
+    cantidad = ''
 
     if request.method == 'POST' and 'calcular' in request.form:
+        from_moneda = request.form.get('from')
+        to_moneda = request.form.get('to')
+        cantidad = request.form.get('cantidad')
+
         try:
-            from_moneda = request.form['from']
-            to_moneda = request.form['to']
-            cantidad_from = float(request.form['cantidad'])
+            cantidad_from = float(cantidad)
 
             url = f"https://rest.coinapi.io/v1/exchangerate/{from_moneda}/{to_moneda}"
             headers = {'X-CoinAPI-Key': API_KEY}
             response = requests.get(url, headers=headers).json()
+            print("Respuesta de la API:", response) 
 
             if 'rate' in response:
                 rate = response['rate']
@@ -49,45 +54,44 @@ def purchase():
                     'cantidad_to': round(cantidad_to, 8),
                     'rate': round(rate, 4)
                 }
-
-                datos_formulario = request.form
             else:
                 resultado = None
         except Exception as e:
             resultado = None
 
     elif request.method == 'POST' and 'confirmar' in request.form:
-        try:
-            from_moneda = request.form['from']
-            to_moneda = request.form['to']
-            cantidad_from = float(request.form['cantidad_from'])
-            cantidad_to = float(request.form['cantidad_to'])
-            rate = float(request.form['rate'])
-
-            fecha = datetime.now().strftime('%d/%m/%Y')
-            hora = datetime.now().strftime('%H:%M:%S')
-
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO movimientos (fecha, hora, from_moneda, cantidad_from, to_moneda, cantidad_to, valor_unitario)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (fecha, hora, from_moneda, cantidad_from, to_moneda, cantidad_to, rate))
-            conn.commit()
-            conn.close()
-
-            return redirect(url_for('index'))
-
-        except Exception as e:
+        from_moneda = request.form['from']
+        to_moneda = request.form['to']
+        cantidad = request.form['cantidad']
+        rate = request.form.get('rate')
+        if not rate:
             return redirect(url_for('purchase'))
+
+        cantidad_from = float(cantidad)
+        rate = float(rate)
+        cantidad_to = cantidad_from * rate
+
+        fecha = datetime.now().strftime('%d/%m/%Y')
+        hora = datetime.now().strftime('%H:%M:%S')
+
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO movimientos (fecha, hora, from_moneda, cantidad_from, to_moneda, cantidad_to, valor_unitario)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (fecha, hora, from_moneda, cantidad_from, to_moneda, cantidad_to, rate))
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('index'))
 
     return render_template(
         "purchase.html",
         monedas=MONEDAS,
         resultado=resultado,
-        from_moneda=datos_formulario.get('from'),
-        to_moneda=datos_formulario.get('to'),
-        cantidad=datos_formulario.get('cantidad', '')
+        from_moneda=from_moneda,
+        to_moneda=to_moneda,
+        cantidad=cantidad
     )
 
 @app.route('/status')
