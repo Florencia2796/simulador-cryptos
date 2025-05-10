@@ -23,15 +23,16 @@
     <label for="cantidad">Cantidad:</label>
     <input type="number" name="cantidad" step="0.01" required value="{{ cantidad }}">
 
-    <!-- Este es el renglón extra SIEMPRE VISIBLE -->
     <div id="resultado-conversion" style="margin-top: 1.5rem; padding: 1rem; border: 1px solid #ccc;">
-        {% if resultado %}
+        {% if resultado and 'error' not in resultado %}
             <h3>Resultado del cálculo:</h3>
             <p>Con <strong>{{ resultado.cantidad_from }} {{ resultado.from }}</strong> obtendrás aproximadamente:</p>
             <p><strong>{{ resultado.cantidad_to }} {{ resultado.to }}</strong></p>
             <p>Precio unitario: 1 {{ resultado.from }} = {{ resultado.rate }} {{ resultado.to }}</p>
 
             <input type="hidden" name="rate" value="{{ resultado.rate }}">
+        {% elif resultado and 'error' in resultado %}
+            <p style="color: red;">{{ resultado.error }}</p>
         {% else %}
             <p>🔎 Aquí se mostrará el resultado de la conversión después de pulsar "Calcular".</p>
         {% endif %}
@@ -39,7 +40,7 @@
 
     <div style="display: flex; gap: 1rem; margin-top: 1rem;">
         <button type="submit" name="calcular">Calcular</button>
-        <button type="submit" name="confirmar" {% if not resultado %}disabled{% endif %}>Comprar</button>
+        <button type="submit" name="confirmar" {% if not resultado or 'error' in resultado %}disabled{% endif %}>Comprar</button>
     </div>
 
     {% if error %}

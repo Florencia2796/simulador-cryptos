@@ -40,11 +40,12 @@ def purchase():
 
             url = f"https://rest.coinapi.io/v1/exchangerate/{from_moneda}/{to_moneda}"
             headers = {'X-CoinAPI-Key': API_KEY}
-            response = requests.get(url, headers=headers).json()
-            print("Respuesta de la API:", response) 
-
-            if 'rate' in response:
-                rate = response['rate']
+            response = requests.get(url, headers=headers)
+            print("Respuesta de la API:", response.status_code, response.json()) # Para ver el código de estado y la respuesta completa
+            response.raise_for_status() # Lanza una excepción para códigos de error HTTP (4xx o 5xx)
+            data = response.json()
+            if 'rate' in data:
+                rate = data['rate']
                 cantidad_to = cantidad_from * rate
 
                 resultado = {
@@ -55,9 +56,15 @@ def purchase():
                     'rate': round(rate, 4)
                 }
             else:
-                resultado = None
+                resultado = {'error': 'Respuesta inesperada de la API: no se encontró la tasa de cambio.'}
+        except requests.exceptions.RequestException as e:
+            resultado = {'error': f'Error al contactar la API: {e}'}
+        except KeyError:
+            resultado = {'error': 'Respuesta inesperada de la API.'}
+        except ValueError:
+            resultado = {'error': 'Por favor, introduce un número válido para la cantidad.'}
         except Exception as e:
-            resultado = None
+            resultado = {'error': f'Ocurrió un error inesperado: {e}'}
 
     elif request.method == 'POST' and 'confirmar' in request.form:
         from_moneda = request.form['from']
