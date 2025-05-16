@@ -1,8 +1,38 @@
 {% extends "base.html" %}
-
-{% block title %}Estado de las Inversiones{% endblock %}
+{% block title %}Estado de la inversión{% endblock %}
 
 {% block content %}
-<h2>Estado actual</h2>
-<p>Esta sección mostrará tu balance y ganancias/pérdidas.</p>
+<h2>Estado actual de tu inversión</h2>
+
+<p><strong>Euros invertidos:</strong> €{{ euros_invertidos }}</p>
+<p><strong>Valor actual de las criptos:</strong> €{{ valor_actual }}</p>
+<p>
+    <strong>Diferencia:</strong>
+    <span style="color: {% if diferencia >= 0 %}green{% else %}red{% endif %};">
+        €{{ diferencia }}
+    </span>
+</p>
+
+<h3>Detalle de tus criptomonedas</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Criptomoneda</th>
+            <th>Cantidad</th>
+            <th>Precio actual (€)</th>
+            <th>Valor total (€)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cripto, datos in cotizaciones.items() %}
+        <tr>
+            <td>{{ cripto }}</td>
+            <td>{{ datos.cantidad }}</td>
+            <td>{{ datos.precio }}</td>
+            <td>{{ datos.valor_total }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}

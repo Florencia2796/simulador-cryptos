@@ -27,7 +27,6 @@ def purchase():
     resultado = None
     datos_formulario = {}
 
-    # CoinGecko usa estos IDs en vez de BTC, ETH, etc.
     equivalencias = {
         'btc': 'bitcoin',
         'eth': 'ethereum',
@@ -51,52 +50,53 @@ def purchase():
         id_from = equivalencias.get(from_moneda, from_moneda)
         id_to = equivalencias.get(to_moneda, to_moneda)
 
-        # Si la moneda de origen es EUR, invertimos la lógica
-        if id_from == 'eur':
-            ids = id_to
-            vs_currencies = id_from
-            inversion = True
-        else:
-            ids = id_from
-            vs_currencies = id_to
-            inversion = False
-
-        url = "https://api.coingecko.com/api/v3/simple/price"
-        params = {
-            'ids': ids,
-            'vs_currencies': vs_currencies
-        }
-
         headers = {
             'x-cg-demo-api-key': api_key
         }
 
-        response = requests.get(url, params=params, headers=headers)
+        try:
+            if from_moneda == 'eur':
+                # Compra de cripto con euros
+                url = "https://api.coingecko.com/api/v3/simple/price"
+                params = {'ids': id_to, 'vs_currencies': 'eur'}
+                response = requests.get(url, params=params, headers=headers).json()
+                tasa = response[id_to]['eur']
+                cantidad_to = cantidad_from / tasa
 
-        if response.status_code != 200:
-            resultado = None  # podrías manejar el error más explícitamente
-        else:
-            data = response.json()
+            elif to_moneda == 'eur':
+                # Venta de cripto a euros
+                url = "https://api.coingecko.com/api/v3/simple/price"
+                params = {'ids': id_from, 'vs_currencies': 'eur'}
+                response = requests.get(url, params=params, headers=headers).json()
+                tasa = response[id_from]['eur']
+                cantidad_to = cantidad_from * tasa
 
-            try:
-                tasa = data[ids][vs_currencies]
-                if inversion:
-                    cantidad_to = cantidad_from / tasa
-                else:
-                    cantidad_to = cantidad_from * tasa
-
-                resultado = {
-                    'from': from_moneda.upper(),
-                    'to': to_moneda.upper(),
-                    'cantidad_from': cantidad_from,
-                    'cantidad_to': round(cantidad_to, 8),
-                    'rate': round(tasa, 6)
+            else:
+                # Cripto a cripto: calcular usando EUR como moneda intermedia
+                url = "https://api.coingecko.com/api/v3/simple/price"
+                params = {
+                    'ids': f'{id_from},{id_to}',
+                    'vs_currencies': 'eur'
                 }
+                response = requests.get(url, params=params, headers=headers).json()
+                tasa_from = response[id_from]['eur']
+                tasa_to = response[id_to]['eur']
+                tasa = tasa_from / tasa_to
+                cantidad_to = cantidad_from * tasa
 
-                datos_formulario = request.form
+            resultado = {
+                'from': from_moneda.upper(),
+                'to': to_moneda.upper(),
+                'cantidad_from': cantidad_from,
+                'cantidad_to': round(cantidad_to, 8),
+                'rate': round(tasa, 6)
+            }
 
-            except KeyError:
-                resultado = None
+            datos_formulario = request.form
+
+        except Exception as e:
+            print("Error al calcular:", e)
+            resultado = None
 
     elif request.method == 'POST' and 'confirmar' in request.form:
         from_moneda = request.form['from']
@@ -133,7 +133,87 @@ def purchase():
 
 @app.route('/status')
 def status():
-    return render_template('status.html')
+    # Equivalencias CoinGecko
+    equivalencias = {
+        'btc': 'bitcoin',
+        'eth': 'ethereum',
+        'usdt': 'tether',
+        'ada': 'cardano',
+        'sol': 'solana',
+        'xrp': 'ripple',
+        'dot': 'polkadot',
+        'doge': 'dogecoin',
+        'shib': 'shiba-inu',
+        'eur': 'eur'
+    }
+
+    api_key = os.getenv("COINGECKO_API_KEY")
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT from_moneda, cantidad_from, to_moneda, cantidad_to FROM movimientos")
+    movimientos = cursor.fetchall()
+    conn.close()
+
+    # Calcular euros invertidos y criptomonedas en cartera
+    euros_invertidos = 0
+    cartera = {}
+
+    for mov in movimientos:
+        from_m, cant_from, to_m, cant_to = mov
+
+        if from_m == 'EUR':
+            euros_invertidos += cant_from
+
+        # Restamos lo que vendimos
+        if from_m != 'EUR':
+            cartera[from_m] = cartera.get(from_m, 0) - cant_from
+
+        if to_m != 'EUR':
+            cartera[to_m] = cartera.get(to_m, 0) + cant_to
+
+    # Consultar a CoinGecko cuánto valen las criptos actuales
+    valor_total = 0
+    cotizaciones = {}
+    headers = {'x-cg-demo-api-key': api_key}
+
+    for cripto, cantidad in cartera.items():
+        if cantidad <= 0:
+            continue
+
+        id_cripto = equivalencias.get(cripto.lower(), cripto.lower())
+
+        url = "https://api.coingecko.com/api/v3/simple/price"
+        params = {
+            'ids': id_cripto,
+            'vs_currencies': 'eur'
+        }
+
+        response = requests.get(url, params=params, headers=headers)
+
+        if response.status_code == 200:
+            data = response.json()
+            try:
+                precio_actual = data[id_cripto]['eur']
+                valor = cantidad * precio_actual
+                cotizaciones[cripto] = {
+                    'cantidad': round(cantidad, 8),
+                    'precio': round(precio_actual, 6),
+                    'valor_total': round(valor, 2)
+                }
+                valor_total += valor
+            except KeyError:
+                pass
+
+    diferencia = round(valor_total - euros_invertidos, 2)
+
+    return render_template(
+        "status.html",
+        euros_invertidos=round(euros_invertidos, 2),
+        valor_actual=round(valor_total, 2),
+        diferencia=diferencia,
+        cotizaciones=cotizaciones
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
