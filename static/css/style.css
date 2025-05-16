@@ -1,0 +1,99 @@
+:root {
+  --color-principal: #2c3e50;
+  --color-secundario: #3498db;
+  --color-texto: #333;
+  --fondo: #f9f9f9;
+  --borde: 1px solid #ddd;
+  --radio: 8px;
+  --espaciado: 1rem;
+  --ancho-max: 800px;
+  --fuente: 'Segoe UI', sans-serif;
+}
+
+body {
+  font-family: var(--fuente);
+  background-color: var(--fondo);
+  color: var(--color-texto);
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: var(--ancho-max);
+  margin: 0 auto;
+  padding: var(--espaciado);
+}
+
+header, footer {
+  background-color: var(--color-principal);
+  color: white;
+  padding: var(--espaciado);
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 1rem;
+  padding: 0;
+}
+
+nav a {
+  text-decoration: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radio);
+}
+
+nav a[aria-current="page"] {
+  background-color: var(--color-secundario);
+}
+
+nav a {
+  text-decoration: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radio);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+nav a:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+
+main {
+  padding: var(--espaciado);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--espaciado);
+}
+
+table th, table td {
+  border: var(--borde);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+button {
+  background-color: var(--color-secundario);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+button[disabled] {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

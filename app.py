@@ -6,7 +6,6 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
-API_KEY = os.getenv("COINAPI_KEY")
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'instance', 'database.db')
 
@@ -26,55 +25,86 @@ def index():
 @app.route('/purchase', methods=['GET', 'POST'])
 def purchase():
     resultado = None
-    from_moneda = ''
-    to_moneda = ''
-    cantidad = ''
+    datos_formulario = {}
+
+    # CoinGecko usa estos IDs en vez de BTC, ETH, etc.
+    equivalencias = {
+        'btc': 'bitcoin',
+        'eth': 'ethereum',
+        'usdt': 'tether',
+        'ada': 'cardano',
+        'sol': 'solana',
+        'xrp': 'ripple',
+        'dot': 'polkadot',
+        'doge': 'dogecoin',
+        'shib': 'shiba-inu',
+        'eur': 'eur'
+    }
+
+    api_key = os.getenv("COINGECKO_API_KEY")
 
     if request.method == 'POST' and 'calcular' in request.form:
-        from_moneda = request.form.get('from')
-        to_moneda = request.form.get('to')
-        cantidad = request.form.get('cantidad')
+        from_moneda = request.form['from'].lower()
+        to_moneda = request.form['to'].lower()
+        cantidad_from = float(request.form['cantidad'])
 
-        try:
-            cantidad_from = float(cantidad)
+        id_from = equivalencias.get(from_moneda, from_moneda)
+        id_to = equivalencias.get(to_moneda, to_moneda)
 
-            url = f"https://rest.coinapi.io/v1/exchangerate/{from_moneda}/{to_moneda}"
-            headers = {'X-CoinAPI-Key': API_KEY}
-            response = requests.get(url, headers=headers)
-            print("Respuesta de la API:", response.status_code, response.json()) # Para ver el código de estado y la respuesta completa
-            response.raise_for_status() # Lanza una excepción para códigos de error HTTP (4xx o 5xx)
+        # Si la moneda de origen es EUR, invertimos la lógica
+        if id_from == 'eur':
+            ids = id_to
+            vs_currencies = id_from
+            inversion = True
+        else:
+            ids = id_from
+            vs_currencies = id_to
+            inversion = False
+
+        url = "https://api.coingecko.com/api/v3/simple/price"
+        params = {
+            'ids': ids,
+            'vs_currencies': vs_currencies
+        }
+
+        headers = {
+            'x-cg-demo-api-key': api_key
+        }
+
+        response = requests.get(url, params=params, headers=headers)
+
+        if response.status_code != 200:
+            resultado = None  # podrías manejar el error más explícitamente
+        else:
             data = response.json()
-            if 'rate' in data:
-                rate = data['rate']
-                cantidad_to = cantidad_from * rate
+
+            try:
+                tasa = data[ids][vs_currencies]
+                if inversion:
+                    cantidad_to = cantidad_from / tasa
+                else:
+                    cantidad_to = cantidad_from * tasa
 
                 resultado = {
-                    'from': from_moneda,
-                    'to': to_moneda,
+                    'from': from_moneda.upper(),
+                    'to': to_moneda.upper(),
                     'cantidad_from': cantidad_from,
                     'cantidad_to': round(cantidad_to, 8),
-                    'rate': round(rate, 4)
+                    'rate': round(tasa, 6)
                 }
-            else:
-                resultado = {'error': 'Respuesta inesperada de la API: no se encontró la tasa de cambio.'}
-        except requests.exceptions.RequestException as e:
-            resultado = {'error': f'Error al contactar la API: {e}'}
-        except KeyError:
-            resultado = {'error': 'Respuesta inesperada de la API.'}
-        except ValueError:
-            resultado = {'error': 'Por favor, introduce un número válido para la cantidad.'}
-        except Exception as e:
-            resultado = {'error': f'Ocurrió un error inesperado: {e}'}
+
+                datos_formulario = request.form
+
+            except KeyError:
+                resultado = None
 
     elif request.method == 'POST' and 'confirmar' in request.form:
         from_moneda = request.form['from']
         to_moneda = request.form['to']
-        cantidad = request.form['cantidad']
+        cantidad_from = float(request.form['cantidad'])
         rate = request.form.get('rate')
         if not rate:
             return redirect(url_for('purchase'))
-
-        cantidad_from = float(cantidad)
         rate = float(rate)
         cantidad_to = cantidad_from * rate
 
@@ -96,9 +126,9 @@ def purchase():
         "purchase.html",
         monedas=MONEDAS,
         resultado=resultado,
-        from_moneda=from_moneda,
-        to_moneda=to_moneda,
-        cantidad=cantidad
+        from_moneda=datos_formulario.get('from'),
+        to_moneda=datos_formulario.get('to'),
+        cantidad=datos_formulario.get('cantidad', '')
     )
 
 @app.route('/status')
