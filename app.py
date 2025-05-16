@@ -133,7 +133,6 @@ def purchase():
 
 @app.route('/status')
 def status():
-    # Equivalencias CoinGecko
     equivalencias = {
         'btc': 'bitcoin',
         'eth': 'ethereum',
@@ -155,24 +154,24 @@ def status():
     movimientos = cursor.fetchall()
     conn.close()
 
-    # Calcular euros invertidos y criptomonedas en cartera
     euros_invertidos = 0
+    euros_recuperados = 0
     cartera = {}
 
-    for mov in movimientos:
-        from_m, cant_from, to_m, cant_to = mov
-
+    for from_m, cant_from, to_m, cant_to in movimientos:
         if from_m == 'EUR':
             euros_invertidos += cant_from
+        if to_m == 'EUR':
+            euros_recuperados += cant_to
 
-        # Restamos lo que vendimos
         if from_m != 'EUR':
             cartera[from_m] = cartera.get(from_m, 0) - cant_from
-
         if to_m != 'EUR':
             cartera[to_m] = cartera.get(to_m, 0) + cant_to
 
-    # Consultar a CoinGecko cuánto valen las criptos actuales
+    saldo_euros = euros_invertidos - euros_recuperados
+
+    # Obtener cotizaciones y valor actual de cada cripto
     valor_total = 0
     cotizaciones = {}
     headers = {'x-cg-demo-api-key': api_key}
@@ -184,32 +183,30 @@ def status():
         id_cripto = equivalencias.get(cripto.lower(), cripto.lower())
 
         url = "https://api.coingecko.com/api/v3/simple/price"
-        params = {
-            'ids': id_cripto,
-            'vs_currencies': 'eur'
-        }
-
+        params = {'ids': id_cripto, 'vs_currencies': 'eur'}
         response = requests.get(url, params=params, headers=headers)
 
         if response.status_code == 200:
             data = response.json()
             try:
-                precio_actual = data[id_cripto]['eur']
-                valor = cantidad * precio_actual
+                precio = data[id_cripto]['eur']
+                valor = cantidad * precio
                 cotizaciones[cripto] = {
                     'cantidad': round(cantidad, 8),
-                    'precio': round(precio_actual, 6),
+                    'precio': round(precio, 6),
                     'valor_total': round(valor, 2)
                 }
                 valor_total += valor
             except KeyError:
-                pass
+                continue
 
-    diferencia = round(valor_total - euros_invertidos, 2)
+    diferencia = round((valor_total + euros_recuperados) - euros_invertidos, 2)
 
     return render_template(
         "status.html",
         euros_invertidos=round(euros_invertidos, 2),
+        euros_recuperados=round(euros_recuperados, 2),
+        saldo_euros=round(saldo_euros, 2),
         valor_actual=round(valor_total, 2),
         diferencia=diferencia,
         cotizaciones=cotizaciones

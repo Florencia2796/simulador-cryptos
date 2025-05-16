@@ -1,0 +1,19 @@
+# Entorno virtual
+venv/
+
+# Claves secretas y variables de entorno
+.env
+
+# Base de datos 
+instance/*.db
+instance/*.sqlite3
+
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de VSCode y sistema
+.vscode/
+.DS_Store
