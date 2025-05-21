@@ -9,7 +9,7 @@
 
     - Python 3.11
     - Flask
-    - HTML5 + CSS3 (estilo propio, sin frameworks externos)
+    - HTML5 + CSS3
     - SQLite3
     - CoinGecko API
     - dotenv
@@ -17,45 +17,18 @@
 
 ---
 
-## Estructura del proyecto
-
-    ├── app.py
-    ├── requirements.txt
-    ├── schema.sql
-    ├── .env
-    ├── instance/
-    │ └── database.db
-    ├── static/
-    │ └── css/
-    │ └── style.css
-    ├── templates/
-    │ ├── base.html
-    │ ├── index.html
-    │ ├── purchase.html
-    │ └── status.html
-    └── README.md
-
-
----
-
 ## Instalación
 
  1. Clonar el repositorio
-    git clone
  2. Crear y activar entorno virtual
-    En Windows PowerShell
-    python -m venv venv
-    .\venv\Scripts\Activate.ps1
  3. Instalar dependencias
-    pip install -r requirements.txt
-
 
 ## Clave API de CoinGecko
-    Esta app utiliza la API gratuita de CoinGecko.
-      1. Regístrate en https://www.coingecko.com/es/developers
-      2. Crea una clave API demo
-      3. Crea un archivo .env en la raíz del proyecto con este contenido:
-            COINGECKO_API_KEY=tu_clave_api_aquí
+Esta app utiliza la API gratuita de CoinGecko.
+ 1. Regístrate en https://www.coingecko.com/es/developers
+ 2. Crea una clave API demo
+ 3. Crea un archivo .env en la raíz del proyecto con este contenido:
+        COINGECKO_API_KEY=tu_clave_api_aquí
 
 ## Base de datos
     La aplicación utiliza SQLite como sistema de almacenamiento.
